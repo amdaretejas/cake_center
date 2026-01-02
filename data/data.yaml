@@ -1,0 +1,7 @@
+# YOLOv8 format data.yaml
+path: data
+train: train/images
+val: val/images
+
+names:
+  0: square
