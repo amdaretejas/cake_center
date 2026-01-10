@@ -1,43 +1,45 @@
 from ultralytics import YOLO
 import os
 
-# Load PRETRAINED OBB model (important)
-model = YOLO("yolo11n-obb.pt")
+# Load your already trained OBB model
+model = YOLO("runs/obb/train8/weights/best.pt")
 
 model.train(
-    data= os.path.join("data", "data.yaml"),  # dataset path
+    data=os.path.join("data", "data.yaml"),
 
-    # ---- Core training ----
-    epochs=200,              # small data → more epochs
-    imgsz=640,
-    batch=4,                 # small batch for stability
-    # device=0,                # GPU (use "cpu" if needed)
+    # ---- Training length ----
+    epochs=120,
+    patience=40,
 
-    # ---- Learning rate tuning (VERY IMPORTANT) ----
-    lr0=0.0003,              # low LR for fine-tuning
+    # ---- Resolution & scale handling ----
+    imgsz=640,               # ↑ helps large objects
+    multi_scale=True,        # VERY IMPORTANT
+    batch=4,
+
+    # ---- Learning rate (gentle fine-tuning) ----
+    lr0=0.00025,             # lower than before
     lrf=0.01,
     optimizer="AdamW",
 
-    # ---- Regularization ----
-    weight_decay=0.0005,
-    patience=50,             # early stopping
+    # ---- Augmentations (BIG OBJECT SAFE) ----
+    degrees=20.0,            # reduce rotation distortion
+    translate=0.2,
+    scale=0.8,
+    shear=0.2,
+    perspective=0.001,
+    flipud=0.5,
+    fliplr=0.5,
 
-    # ---- Augmentations (angle-focused) ----
-    degrees=45.0,            # strong rotation
-    translate=0.05,
-    scale=0.3,
-    shear=0.0,
-    perspective=0.0,
-    flipud=0.0,              # avoid flipping if angle matters
-    fliplr=0.0,
+    # ---- OBB loss rebalance ----
+    box=10,                 # reduce over-penalty
+    pose=20,
+    cls=0.6,
+    dfl=1.2,
 
-    # ---- OBB specific ----
-    box=7.5,                 # bbox loss weight ↑
-    cls=0.5,
-    dfl=1.5,
+    # ---- Backbone adaptation ----
+    freeze=4,                # unfreeze more layers
 
     # ---- Stability ----
-    freeze=10,               # freeze backbone layers
     workers=2,
     amp=True,
     verbose=True
