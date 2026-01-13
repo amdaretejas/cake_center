@@ -1,7 +1,9 @@
 # YOLOv8 format data.yaml
 path: data
-train: split3/train/images
-val: split3/val/images
+train: split5/train/images
+val: split5/val/images
 
 names:
-  0: square
+  # 0: square
+  0: circle
+  1 : rectangle
