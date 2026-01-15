@@ -28,12 +28,30 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-REG_TRIGGER = 0 # this register is set to 1 to predict the object 
-REG_LIVE = 1 # this register shows if the system is live or not
-REG_PROCESSING = 2 # this register is set to 1 when processing is going on
-REG_X_MM = 4 # this register holds the X coordinate in mm
-REG_Y_MM = 3 # this register holds the Y coordinate in mm
-REG_STATUS = 5 # this register holds the status of the system
+# REG_TRIGGER = 0 # this register is set to 1 to predict the object 
+# REG_LIVE = 1 # this register shows if the system is live or not
+# REG_PROCESSING = 2 # this register is set to 1 when processing is going on
+# REG_X_MM = 4 # this register holds the X coordinate in mm
+# REG_Y_MM = 3 # this register holds the Y coordinate in mm
+# REG_STATUS = 5 # this register holds the status of the system
+
+# write registers
+REG_LIVE = 0
+REG_PROCESSING = 1
+REG_X_MM = 2
+REG_Y_MM = 3
+REG_STATUS = 4
+
+# read registers
+REG_TRIGGER = 5
+REG_X_OFFSET = 6
+REG_Y_OFFSET = 7
+REG_PIX_TO_MM_X = 8
+REG_PIX_TO_MM_Y = 9
+REG_X1_LIMIT = 10
+REG_Y1_LIMIT = 11
+REG_X2_LIMIT = 12
+REG_Y2_LIMIT = 13
 
 x_center_offset = 0 #+5  # pixels
 y_center_offset = 0 #-15  # pixels
@@ -52,16 +70,16 @@ y_machine_mm = 0 # machine coordinate in mm for y axis
 x_hexadecimal = 0
 y_hexadecimal = 0
 
-pix_conversion_x = 1.84  # ratio of pixels to mm in x axis
-pix_conversion_y = 1.84  # ratio of pixels to mm in y axis
+pix_conversion_x = modbus_client.get_register(REG_PIX_TO_MM_X)/1000 # 1.84  # ratio of pixels to mm in x axis
+pix_conversion_y = modbus_client.get_register(REG_PIX_TO_MM_Y)/1000 # 1.84  # ratio of pixels to mm in y axis
 
-x_offset = 281 # machine and real world origin offset in mm for x axis
-y_offset = 111 # machine and real world origin offset in mm for y axis
+x_offset = modbus_client.get_register(REG_X_OFFSET) #281 # machine and real world origin offset in mm for x axis
+y_offset = modbus_client.get_register(REG_Y_OFFSET) #111 # machine and real world origin offset in mm for y axis
 
-x1_limit = 0 # minimum x axis limits for cutting in mm
-y1_limit = 0 # minimum y axis limits for cutting in mm
-x2_limit = 420 # maximum x axis limits for cutting in mm
-y2_limit = 540 # maximum y axis limits for cutting in mm
+x1_limit = modbus_client.get_register(REG_X1_LIMIT) # minimum x axis limits for cutting in mm
+y1_limit = modbus_client.get_register(REG_Y1_LIMIT) # minimum y axis limits for cutting in mm
+x2_limit = modbus_client.get_register(REG_X2_LIMIT) # maximum x axis limits for cutting in mm
+y2_limit = modbus_client.get_register(REG_Y2_LIMIT) # maximum y axis limits for cutting in mm
 
 last_listning_value = 0
 current_listning_value = 0
@@ -69,12 +87,12 @@ current_listning_value = 0
 prediction_status = 0 # 0 = no object, 1 = object detected, 2 = object out of bounds
 
 try:
-    modbus_client.set_register(REG_TRIGGER, 0)
+    modbus_client.set_register(REG_LIVE, 0)
     modbus_client.set_register(REG_PROCESSING, 0)
     modbus_client.set_register(REG_X_MM, 0)
     modbus_client.set_register(REG_Y_MM, 0)
-    modbus_client.set_register(REG_TRIGGER, 0)
     modbus_client.set_register(REG_STATUS, 0)
+    modbus_client.set_register(REG_TRIGGER, 0)
     while running:
         modbus_client.set_register(REG_LIVE, 1)
         ret, frame = camera.cam.read()
