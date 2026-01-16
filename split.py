@@ -3,14 +3,15 @@ import random
 import shutil
 from pathlib import Path
 
+number = 6  # Change here
 # Paths
-base_dir = Path("data/label5") # your_dataset Change here
+base_dir = Path(f"data/label{number}") # your_dataset Change here
 images_dir = base_dir / "images"
 labels_dir = base_dir / "labels"
 
 # Output folders
 output_dir = Path("data")
-output_base = output_dir / "split5" # Change here
+output_base = output_dir / f"split{number}" # Change here
 train_img_dir = output_base / "train" / "images"
 train_lbl_dir = output_base / "train" / "labels"
 val_img_dir = output_base / "val" / "images"

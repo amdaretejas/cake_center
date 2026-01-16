@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import os
 
 # Load your already trained OBB model
-model = YOLO("runs/obb/train8/weights/best.pt")
+model = YOLO("runs/obb/train10/weights/best.pt")
 
 model.train(
     data=os.path.join("data", "data.yaml"),
@@ -13,8 +13,8 @@ model.train(
 
     # ---- Resolution & scale handling ----
     imgsz=640,               # ↑ helps large objects
-    multi_scale=True,        # VERY IMPORTANT
-    batch=4,
+    multi_scale=False,        # VERY IMPORTANT
+    batch=1,
 
     # ---- Learning rate (gentle fine-tuning) ----
     lr0=0.00025,             # lower than before
@@ -40,7 +40,8 @@ model.train(
     freeze=4,                # unfreeze more layers
 
     # ---- Stability ----
-    workers=2,
+    workers=0,
     amp=True,
-    verbose=True
+    verbose=True,
+    # resume=True
 )

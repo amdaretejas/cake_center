@@ -70,16 +70,6 @@ y_machine_mm = 0 # machine coordinate in mm for y axis
 x_hexadecimal = 0
 y_hexadecimal = 0
 
-pix_conversion_x = modbus_client.get_register(REG_PIX_TO_MM_X)/1000 # 1.84  # ratio of pixels to mm in x axis
-pix_conversion_y = modbus_client.get_register(REG_PIX_TO_MM_Y)/1000 # 1.84  # ratio of pixels to mm in y axis
-
-x_offset = modbus_client.get_register(REG_X_OFFSET) #281 # machine and real world origin offset in mm for x axis
-y_offset = modbus_client.get_register(REG_Y_OFFSET) #111 # machine and real world origin offset in mm for y axis
-
-x1_limit = modbus_client.get_register(REG_X1_LIMIT) # minimum x axis limits for cutting in mm
-y1_limit = modbus_client.get_register(REG_Y1_LIMIT) # minimum y axis limits for cutting in mm
-x2_limit = modbus_client.get_register(REG_X2_LIMIT) # maximum x axis limits for cutting in mm
-y2_limit = modbus_client.get_register(REG_Y2_LIMIT) # maximum y axis limits for cutting in mm
 
 last_listning_value = 0
 current_listning_value = 0
@@ -94,6 +84,16 @@ try:
     modbus_client.set_register(REG_STATUS, 0)
     modbus_client.set_register(REG_TRIGGER, 0)
     while running:
+        pix_conversion_x = modbus_client.get_register(REG_PIX_TO_MM_X)/1000 # 1.84  # ratio of pixels to mm in x axis
+        pix_conversion_y = modbus_client.get_register(REG_PIX_TO_MM_Y)/1000 # 1.84  # ratio of pixels to mm in y axis
+
+        x_offset = modbus_client.get_register(REG_X_OFFSET) #281 # machine and real world origin offset in mm for x axis
+        y_offset = modbus_client.get_register(REG_Y_OFFSET) #111 # machine and real world origin offset in mm for y axis
+
+        x1_limit = modbus_client.get_register(REG_X1_LIMIT) # minimum x axis limits for cutting in mm
+        y1_limit = modbus_client.get_register(REG_Y1_LIMIT) # minimum y axis limits for cutting in mm
+        x2_limit = modbus_client.get_register(REG_X2_LIMIT) # maximum x axis limits for cutting in mm
+        y2_limit = modbus_client.get_register(REG_Y2_LIMIT) # maximum y axis limits for cutting in mm
         modbus_client.set_register(REG_LIVE, 1)
         ret, frame = camera.cam.read()
         if not ret:
@@ -122,8 +122,6 @@ try:
                 object_box = yolo_model.find_box_obb(result)
                 # object_center = yolo_model.find_center(result)
                 # object_box = yolo_model.find_box(result) 
-                object_center[0] = object_center[0] - x_center_offset
-                object_center[1] = object_center[1] - y_center_offset
                 frame = camera.add_middle_line(frame)
                 frame = camera.add_origin(frame)
                 frame = camera.add_center(frame)
@@ -133,6 +131,8 @@ try:
                     frame = camera.cut_frame(frame, [object_box[0], object_box[1], object_box[4], object_box[5]], cut_x=5, cut_y=7)
                 prediction_status = 0  # reset status
                 if object_center != []:
+                    object_center[0] = object_center[0] - x_center_offset
+                    object_center[1] = object_center[1] - y_center_offset
                     x_px = int(object_center[0])
                     # y_px = int(object_center[1])
                     y_px = int(h - object_center[1])  # invert y axis
