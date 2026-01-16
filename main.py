@@ -6,8 +6,29 @@ import signal
 import sys
 import traceback
 import time
+import os
 import numpy as np
 import cv2
+from datetime import datetime
+
+# Base folder parallel to main.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SAVE_ROOT = os.path.join(BASE_DIR, "live_Image_data")
+
+def get_today_folder():
+    """Returns today's folder path (creates it if not exists)."""
+    today = datetime.now().strftime("%Y-%m-%d")   # ex: 2026-01-16
+    folder = os.path.join(SAVE_ROOT, today)
+    os.makedirs(folder, exist_ok=True)
+    return folder
+
+def save_frame(frame, counter):
+    """Save a frame in today's folder."""
+    folder = get_today_folder()
+    filename = f"img_{counter:06d}.jpg"
+    path = os.path.join(folder, filename)
+    cv2.imwrite(path, frame)
+    return path
 
 data = np.load("camera_calibration.npz")
 camera_matrix = data["camera_matrix"]
@@ -76,6 +97,8 @@ current_listning_value = 0
 
 prediction_status = 0 # 0 = no object, 1 = object detected, 2 = object out of bounds
 
+img_counter = 0
+
 try:
     modbus_client.set_register(REG_LIVE, 0)
     modbus_client.set_register(REG_PROCESSING, 0)
@@ -114,6 +137,9 @@ try:
         # print(f"Listening value at register {REG_TRIGGER}: {listening_value}")
         if current_listning_value == 1 and last_listning_value == 0:
             modbus_client.set_register(REG_PROCESSING, 1)
+            saved_path = save_frame(frame, img_counter)
+            print("Saved:", saved_path)
+            img_counter += 1
             results = yolo_model.predict(frame)
             for result in results:
                 names = [result.names[cls.item()] for cls in result.obb.cls.int()]  # class name of each box
