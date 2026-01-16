@@ -13,7 +13,7 @@ data = np.load("camera_calibration.npz")
 camera_matrix = data["camera_matrix"]
 dist_coeffs = data["dist_coeffs"]
 
-camera = Camera(camera_index=1)
+camera = Camera(camera_index=0)
 modbus_client = ModbusMaster(host="192.168.1.20", port=502)
 # modbus_client = ModbusMaster(port=8000)
 yolo_model = YoloModel(model_path="runs/obb/train10/weights/best.pt")
@@ -147,21 +147,29 @@ try:
                     x_machine_mm = x_mm - x_offset
                     y_machine_mm = y_mm - y_offset
                     prediction_status = 1  # object detected successfully
-                    if (x1_limit > x_machine_mm > x2_limit) or (y1_limit > y_machine_mm > y2_limit):
-                        x_machine_mm = 0
-                        y_machine_mm = 0
+                    if (x1_limit > x_machine_mm) or (x_machine_mm > x2_limit) or (y1_limit > y_machine_mm) or (y_machine_mm > y2_limit):
+                        # x_machine_mm = 0
+                        # y_machine_mm = 0
                         prediction_status = 2  # object out of bounds
-                modbus_client.set_register(REG_X_MM, y_machine_mm)
-                modbus_client.set_register(REG_Y_MM, x_machine_mm)
+                modbus_client.set_register(REG_X_MM, x_machine_mm if x_machine_mm >= 0 else 0)
+                modbus_client.set_register(REG_Y_MM, y_machine_mm if y_machine_mm >= 0 else 0)
                 modbus_client.set_register(REG_STATUS, prediction_status)
                 modbus_client.set_register(REG_PROCESSING, 0)
                 print("#/--------------------------------")
-                print(f"Listening value at register {REG_TRIGGER}: {modbus_client.get_register(REG_TRIGGER)}")
                 print(f"Listening value at register {REG_PROCESSING}: {modbus_client.get_register(REG_PROCESSING)}")
                 print(f"Listening value at register {REG_X_MM}: {modbus_client.get_register(REG_X_MM)}")
                 print(f"Listening value at register {REG_Y_MM}: {modbus_client.get_register(REG_Y_MM)}")
                 print(f"Listening value at register {REG_TRIGGER}: {modbus_client.get_register(REG_TRIGGER)}")
                 print(f"Listening value at register {REG_STATUS}: {modbus_client.get_register(REG_STATUS)}")
+                print(f"Listening value at register {REG_TRIGGER}: {modbus_client.get_register(REG_TRIGGER)}")
+                print(f"Listening value at register {REG_X_OFFSET}: {modbus_client.get_register(REG_X_OFFSET)}")
+                print(f"Listening value at register {REG_Y_OFFSET}: {modbus_client.get_register(REG_Y_OFFSET)}")
+                print(f"Listening value at register {REG_PIX_TO_MM_X}: {modbus_client.get_register(REG_PIX_TO_MM_X)}")
+                print(f"Listening value at register {REG_PIX_TO_MM_Y}: {modbus_client.get_register(REG_PIX_TO_MM_Y)}")
+                print(f"Listening value at register {REG_X1_LIMIT}: {modbus_client.get_register(REG_X1_LIMIT)}")
+                print(f"Listening value at register {REG_Y1_LIMIT}: {modbus_client.get_register(REG_Y1_LIMIT)}")
+                print(f"Listening value at register {REG_X2_LIMIT}: {modbus_client.get_register(REG_X2_LIMIT)}")
+                print(f"Listening value at register {REG_Y2_LIMIT}: {modbus_client.get_register(REG_Y2_LIMIT)}")
                 print(f"#/--------------------------------")
                 print("Detected object data:-")
                 print(f"  Center X in mm: {x_mm} (px: {x_px})")
